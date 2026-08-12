@@ -1,12 +1,94 @@
 #include "shell.h"
-#include <fcntl.h>
 #include <unistd.h>
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/sysmacros.h>
 #include <errno.h>
-#include <time.h>
+#include <pwd.h>
 
+
+/**
+ * ====================================================================================
+ * COMANDO: saludar
+ * ====================================================================================
+ */
+int cmd_saludar(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+
+    /* 1. LLAMADA AL SISTEMA: getuid */
+    LOG_SYSCALL("getuid", "");
+    uid_t uid = getuid();
+    LOG_SYSCALL_RESULT(uid); /* Devuelve el ID numérico del usuario actual */
+
+    /* Consultar base de datos del sistema /etc/passwd */
+    struct passwd *pw = getpwuid(uid);
+    const char *username = pw ? pw->pw_name : "usuario desconocido";
+
+    printf(COLOR_RESULT "¡Hola, %s! Bienvenido al Shell editor de texto.\n" COLOR_RESET, username);
+    return 0;
+}
+
+
+/*
+ * ========
+ * Despedir
+ * ========
+ */
+
+int cmd_despedir(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+
+    /* 1. LLAMADA AL SISTEMA: getuid */
+    LOG_SYSCALL("getuid", "");
+    uid_t uid = getuid();
+    LOG_SYSCALL_RESULT(uid); /* Devuelve el ID numérico del usuario actual */
+
+    /* Consultar base de datos del sistema /etc/passwd */
+    struct passwd *pw = getpwuid(uid);
+    const char *username = pw ? pw->pw_name : "usuario desconocido";
+
+    printf(COLOR_RESULT "¡Chao, %s!\n" COLOR_RESET, username);
+    return 0;
+}
+
+/*
+ * ========
+ * color
+ * ========
+ */
+
+int cmd_color(int argc, char **argv) {
+    if (argc != 3) {
+        fprintf(stderr, COLOR_ERROR "Uso: color <color> <texto>\n" COLOR_RESET);
+        return 1;
+    }
+    const char *color = argv[1];
+    const char *text = argv[2];
+
+    char *colorCode;
+
+    if (strcmp(color, "green") == 0) {
+        colorCode = "\033[32m";
+    } else if (strcmp(color, "yellow") == 0) {
+        colorCode = "\033[33m";
+    } else if (strcmp(color, "red") == 0) {
+        colorCode = "\033[31m";
+    } else if (strcmp(color, "blue") == 0) {
+        colorCode = "\033[34m";
+    } else {
+        fprintf(stderr,COLOR_ERROR "Color invalido: %s\n" COLOR_RESET, color);
+        return 1;
+    }
+
+    printf("%s%s\n" COLOR_RESET,colorCode, text);
+    return 0;
+}
+
+/*
+ * ========
+ * clonar
+ * ========
+ */
 int cmd_clone(int argc, char **argv)
 {
     if (argc != 2) {

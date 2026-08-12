@@ -14,132 +14,35 @@
  * Cada elemento de la tabla inicializa una estructura Command declarada en shell.h.
  */
 Command commands[] = {
-    /* --- Categoría: Datos --- */
+    /* --- Categoría: Entrenamiento --- */
     {
-        "d_create", "datos", 
-        "d_create <archivo> \"<texto>\"", 
-        "Crea un archivo escribiendo un texto en él.",
-        "open(2), write(2), close(2)", 
-        cmd_d_create
-    },
-    {
-        "d_read", "datos", 
-        "d_read <archivo>", 
-        "Lee y muestra el contenido de un archivo.",
-        "open(2), read(2), close(2)", 
-        cmd_d_read
-    },
-    {
-        "d_info", "datos", 
-        "d_info <archivo>", 
-        "Muestra metadatos detallados de un archivo.",
-        "stat(2)", 
-        cmd_d_info
-    },
-    {
-        "d_copy", "datos", 
-        "d_copy <origen> <destino>", 
-        "Copia recursiva o lineal de bytes entre archivos.",
-        "open(2), read(2), write(2), close(2)", 
-        cmd_d_copy
-    },
-
-    /* --- Categoría: Memoria --- */
-    {
-        "m_sbrk", "memoria", 
-        "m_sbrk <incremento_bytes>", 
-        "Modifica el program break de la sección heap.",
-        "sbrk(2) / brk(2)", 
-        cmd_m_sbrk
-    },
-    {
-        "m_mmap", "memoria", 
-        "m_mmap <tamaño_bytes>", 
-        "Mapea una zona de memoria anónima y escribe un patrón.",
-        "mmap(2), munmap(2)", 
-        cmd_m_mmap
-    },
-    {
-        "m_info", "memoria", 
-        "m_info", 
-        "Muestra el estado del mapa de memoria del proceso actual.",
-        "Lectura directa de /proc/self/status", 
-        cmd_m_info
-    },
-
-    /* --- Categoría: Monitoreo/Procesos --- */
-    {
-        "p_fork", "monitoreo", 
-        "p_fork", 
-        "Crea un proceso hijo, demuestra sincronización y códigos de salida.",
-        "fork(2), getpid(2), getppid(2), waitpid(2)", 
-        cmd_p_fork
-    },
-    {
-        "p_exec", "monitoreo", 
-        "p_exec <comando> [argumentos...]", 
-        "Crea un proceso hijo y ejecuta un comando externo del sistema.",
-        "fork(2), execvp(3), waitpid(2)", 
-        cmd_p_exec
-    },
-    {
-        "p_kill", "monitoreo", 
-        "p_kill <pid> <numero_señal>", 
-        "Envía una señal específica a un proceso en ejecución.",
-        "kill(2)", 
-        cmd_p_kill
-    },
-    {
-        "p_monitor", "monitoreo", 
-        "p_monitor", 
-        "Muestra el uso detallado de recursos de la CPU y memoria del shell.",
-        "getrusage(2)", 
-        cmd_p_monitor
-    },
-
-    /* --- Categoría: Utilidades --- */
-    {
-        "saludar", "utilidades",
+        "saludar", "entrenamiento",
         "saludar",
         "Muestra un saludo personalizado para el usuario actual.",
         "getuid(2)",
         cmd_saludar
     },
     {
-        "despedir", "utilidades",
+        "despedir", "entrenamiento",
         "despedir",
         "Muestra una despedida personalizada para el usuario actual.",
         "getuid(2)",
         cmd_despedir
     },
-    {
-        "hora", "utilidades",
-        "hora",
-        "Muestra la hora actual del sistema.",
-        "time(2)",
-        cmd_hora
-    },
-    {
-        "fecha", "utilidades",
-        "fecha",
-        "Muestra la fecha actual del sistema.",
-        "time(2)",
-        cmd_fecha
-    },
 {
-    "color", "utilidades",
+    "color", "entrenamiento",
     "color <color> \"<texto>\"",
     "Se le da el color al texto (green, yellow, blue, red).",
     "unknown",
     cmd_color
-},
+    },
 {
     "clone", "entrenamiento",
     "clone <archivo>",
     "Se clona el archivo",
     "link()",
     cmd_clone
-}
+    }
 };
 
 /* Número total de comandos en el shell */
@@ -212,15 +115,11 @@ int parse_line(char *line, char **argv) {
 void print_help(const char *arg) {
     if (arg == NULL) {
         /* Caso 1: Escribió 'help' solo: Mostrar categorías principales */
-        printf(COLOR_TITLE "\n--- Shell de Aprendizaje de Syscalls (SO2026B) ---\n" COLOR_RESET);
+        printf(COLOR_TITLE "\n--- Shell editora de texto ---\n" COLOR_RESET);
         printf("Este shell te permite explorar cómo funcionan las llamadas al sistema en Linux.\n");
         printf("Los comandos están clasificados en categorías.\n\n");
         printf("Categorías disponibles:\n");
-        printf("  " COLOR_CATEGORY "datos" COLOR_RESET "      - Comandos de archivos y datos (open, read, write, stat, ...)\n");
-        printf("  " COLOR_CATEGORY "memoria" COLOR_RESET "    - Comandos de control de heap y memoria (sbrk, mmap, ...)\n");
-        printf("  " COLOR_CATEGORY "monitoreo" COLOR_RESET "  - Comandos de procesos, señales y recursos (fork, exec, kill, getrusage)\n");
-        printf("  " COLOR_CATEGORY "utilidades" COLOR_RESET " - Comandos útiles del sistema (saludar, hora, fecha, color, despedirse)\n");
-        printf("  " COLOR_CATEGORY "entrenamiento" COLOR_RESET " - Comandos del entrenamiento\n\n");
+        printf("  " COLOR_CATEGORY "entrenamiento" COLOR_RESET " - Comandos del entrenamiento (saludar, despedir, color, clonar)\n\n");
         printf("Uso general:\n");
         printf("  " COLOR_PROMPT "help <categoria>" COLOR_RESET "  - Muestra comandos específicos de una categoría.\n");
         printf("  " COLOR_PROMPT "help <comando>" COLOR_RESET "    - Explica el uso y las syscalls de un comando específico.\n");
@@ -230,8 +129,7 @@ void print_help(const char *arg) {
     }
 
     /* Caso 2: El usuario escribió 'help <categoria>': Mostrar comandos del grupo */
-    if (strcmp(arg, "datos") == 0 || strcmp(arg, "memoria") == 0 || 
-        strcmp(arg, "monitoreo") == 0 || strcmp(arg, "utilidades") == 0) {
+    if (strcmp(arg, "entrenamiento") == 0) {
         printf(COLOR_TITLE "\n--- Categoría: %s ---\n" COLOR_RESET, arg);
         for (int i = 0; i < num_commands; i++) {
             if (strcmp(commands[i].category, arg) == 0) {
@@ -272,7 +170,7 @@ int main() {
 
     /* Banner de bienvenida premium */
     printf(COLOR_TITLE "========================================================\n" COLOR_RESET);
-    printf(COLOR_TITLE "    Shell Educativo de Llamadas al Sistema de Linux\n" COLOR_RESET);
+    printf(COLOR_TITLE "    Shell editora de texto\n" COLOR_RESET);
     printf(COLOR_INFO "    Asignatura: SO2026B (Sistemas Operativos)\n" COLOR_RESET);
     printf(COLOR_INFO "    Escribe 'help' para iniciar. Desarrollado en C.\n" COLOR_RESET);
     printf(COLOR_TITLE "========================================================\n\n" COLOR_RESET);
@@ -296,7 +194,7 @@ int main() {
 
         /* Comandos Built-in generales */
         if (strcmp(argv[0], "exit") == 0) {
-            printf(COLOR_INFO "Saliendo del shell educativo. ¡Hasta luego!\n" COLOR_RESET);
+            printf(COLOR_INFO "Saliendo del shell. ¡Hasta luego!\n" COLOR_RESET);
             break;
         } else if (strcmp(argv[0], "clear") == 0) {
             printf("\033[H\033[J"); /* Limpia la pantalla usando secuencias de escape ANSI */
@@ -322,8 +220,7 @@ int main() {
 
         /* Si no se encuentra en el registro educativo del shell */
         if (!found) {
-            printf(COLOR_ERROR "Comando '%s' no encontrado en el shell educativo.\n" COLOR_RESET, argv[0]);
-            printf(COLOR_INFO "Prueba usando 'p_exec %s' si quieres ejecutarlo como un binario de Linux externo, o escribe 'help'.\n" COLOR_RESET, argv[0]);
+            printf(COLOR_ERROR "Comando '%s' no encontrado en el shell.\n" COLOR_RESET, argv[0]);
         }
         printf("\n");
     }

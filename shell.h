@@ -70,31 +70,10 @@ typedef struct {
  * ====================================================================================
  */
 
-/* --- Categoría: Datos y Archivos (cat_datos.c) --- */
-int cmd_d_create(int argc, char **argv); /* Syscalls: open, write, close */
-int cmd_d_read(int argc, char **argv);   /* Syscalls: open, read, close */
-int cmd_d_info(int argc, char **argv);   /* Syscalls: stat */
-int cmd_d_copy(int argc, char **argv);   /* Syscalls: open, read, write, close */
-
-/* --- Categoría: Memoria (cat_memoria.c) --- */
-int cmd_m_sbrk(int argc, char **argv);   /* Syscalls: sbrk / brk */
-int cmd_m_mmap(int argc, char **argv);   /* Syscalls: mmap, munmap */
-int cmd_m_info(int argc, char **argv);   /* Mecanismo: Lectura de /proc/self/status */
-
-/* --- Categoría: Monitoreo/Procesos (cat_monitoreo.c) --- */
-int cmd_p_fork(int argc, char **argv);    /* Syscalls: fork, getpid, getppid, waitpid */
-int cmd_p_exec(int argc, char **argv);    /* Syscalls: fork, execvp, waitpid */
-int cmd_p_kill(int argc, char **argv);    /* Syscalls: kill */
-int cmd_p_monitor(int argc, char **argv); /* Syscalls: getrusage */
-
 /* --- Categoría: Utilidades (cat_util.c) --- */
 int cmd_saludar(int argc, char **argv);   /* Syscalls: getuid */
-int cmd_hora(int argc, char **argv);      /* Syscalls: time */
-int cmd_fecha(int argc, char **argv);     /* Syscalls: time */
 int cmd_despedir(int argc, char **argv);
 int cmd_color(int argc, char **argv);
-
-/* --- Categoría: Clonar (cat_util.c) --- */
 int cmd_clone(int argc, char **argv);
 
 #endif /* SHELL_H */
