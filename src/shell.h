@@ -70,10 +70,13 @@ typedef struct {
  * ====================================================================================
  */
 
-/* --- Categoría: Utilidades (cat_util.c) --- */
+/* --- Categoría: Utilidades (cat_entrenamiento.c) --- */
 int cmd_saludar(int argc, char **argv);   /* Syscalls: getuid */
 int cmd_despedir(int argc, char **argv);
 int cmd_color(int argc, char **argv);
 int cmd_clone(int argc, char **argv);
+
+/* --- Categoría: Editor (cat_editor.c) --- */
+int cmd_editar(int argc, char **argv);
 
 #endif /* SHELL_H */

@@ -27,7 +27,6 @@ int cmd_saludar(int argc, char **argv) {
     return 0;
 }
 
-
 /*
  * ========
  * Despedir

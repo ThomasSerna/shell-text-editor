@@ -42,6 +42,15 @@ Command commands[] = {
     "Se clona el archivo",
     "link()",
     cmd_clone
+},
+
+    /* --- Categoría: Editor --- */
+{
+    "editar", "editor",
+    "editar",
+    "Se abre el editor de archivos",
+    "unknown",
+    cmd_editar
     }
 };
 
@@ -120,6 +129,7 @@ void print_help(const char *arg) {
         printf("Los comandos están clasificados en categorías.\n\n");
         printf("Categorías disponibles:\n");
         printf("  " COLOR_CATEGORY "entrenamiento" COLOR_RESET " - Comandos del entrenamiento (saludar, despedir, color, clonar)\n\n");
+        printf("  " COLOR_CATEGORY "editor" COLOR_RESET " - Comandos de edición (editar)\n\n");
         printf("Uso general:\n");
         printf("  " COLOR_PROMPT "help <categoria>" COLOR_RESET "  - Muestra comandos específicos de una categoría.\n");
         printf("  " COLOR_PROMPT "help <comando>" COLOR_RESET "    - Explica el uso y las syscalls de un comando específico.\n");
@@ -129,7 +139,7 @@ void print_help(const char *arg) {
     }
 
     /* Caso 2: El usuario escribió 'help <categoria>': Mostrar comandos del grupo */
-    if (strcmp(arg, "entrenamiento") == 0) {
+    if (strcmp(arg, "entrenamiento") == 0 || strcmp(arg, "editor") == 0) {
         printf(COLOR_TITLE "\n--- Categoría: %s ---\n" COLOR_RESET, arg);
         for (int i = 0; i < num_commands; i++) {
             if (strcmp(commands[i].category, arg) == 0) {
@@ -218,7 +228,7 @@ int main() {
             }
         }
 
-        /* Si no se encuentra en el registro educativo del shell */
+        /* Si no se encuentra en el registro del shell */
         if (!found) {
             printf(COLOR_ERROR "Comando '%s' no encontrado en el shell.\n" COLOR_RESET, argv[0]);
         }

@@ -2,7 +2,13 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=gnu99 -g -D_GNU_SOURCE
 
 TARGET = sys_shell
-SRCS = src/main.c src/cat_entrenamiento.c
+
+SRCS = src/main.c \
+       src/cat_entrenamiento.c \
+       src/cat_editor.c \
+       src/editor/editor.c \
+       src/editor/editor_file.c
+
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
