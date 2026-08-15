@@ -17,18 +17,19 @@ int cmd_open(EditorState *state, int argc, char **argv)
     }
     const char *filename = argv[1];
 
-    if (state->fd != -1) {
-        close(state->fd);
-        state->fd = -1;
-    }
+    // System call: open()
+    int new_fd = open(filename, O_RDWR | O_CREAT, 0644);
 
-    /* 1. LLAMADA AL SISTEMA: open */
-    state->fd = open(filename, O_RDWR | O_CREAT, 0644);
-    if (state->fd == -1) {
-        /* Si falla open, retorna -1 y asigna el código en errno */
+    if (new_fd == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
         return 1;
     }
+
+    if (state->fd != -1) {
+        close(state->fd);
+    }
+
+    state->fd = new_fd;
 
     printf(COLOR_INFO "Se ha abierto el archivo %s\n" COLOR_RESET, filename);
     return 0;

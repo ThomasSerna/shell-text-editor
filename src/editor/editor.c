@@ -138,7 +138,9 @@ int editor_main()
 
         /* Comandos Built-in generales */
         if (strcmp(argv[0], "exit") == 0 || strcmp(argv[0], "q") == 0) {
-            cmd_quit(&state, 1, NULL);
+            if (cmd_quit(&state, 1, NULL) != 0) {
+                continue;
+            }
             printf(COLOR_INFO "Saliendo del editor. ¡Hasta luego!\n" COLOR_RESET);
             break;
         } else if (strcmp(argv[0], "clear") == 0) {
