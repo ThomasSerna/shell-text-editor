@@ -33,6 +33,15 @@
  * Dependiendo del resultado, se invocará LOG_SYSCALL_RESULT o LOG_SYSCALL_ERROR.
  */
 
+typedef struct {
+    const char *name;        /* Nombre textual del comando que el usuario escribe (e.g., 'd_create') */
+    const char *category;    /* Categoría de ordenación: "datos", "memoria", "monitoreo", "utilidades" */
+    const char *usage;       /* Sintaxis de uso del comando para mostrar en caso de error */
+    const char *description; /* Explicación en español de lo que hace el comando a nivel lógico */
+    const char *syscalls;    /* Explicación de las syscalls involucradas que se mostrarán en la ayuda */
+    int (*handler)(int argc, char **argv); /* Puntero a la función que implementa la lógica del comando */
+} Command;
+
 /* Imprime la llamada al sistema y sus parámetros */
 #define LOG_SYSCALL(syscall_name, format, ...) \
     printf(COLOR_SYSCALL "[syscall] " syscall_name COLOR_RESET "(" format ") ... " COLOR_RESET, ##__VA_ARGS__)
@@ -48,22 +57,6 @@
 /* Imprime el valor -1 en rojo indicando un error y adjunta el texto descriptivo del código errno */
 #define LOG_SYSCALL_ERROR(err_name) \
     printf("= " COLOR_ERROR "-1 (%s)" COLOR_RESET "\n", err_name)
-
-/**
- * ====================================================================================
- * Estructura de Registro de Comandos
- * ====================================================================================
- * Define un comando del shell con toda su metadata con fines pedagógicos.
- * Permite listar automáticamente los comandos asociados a syscalls de forma dinámica.
- */
-typedef struct {
-    const char *name;        /* Nombre textual del comando que el usuario escribe (e.g., 'd_create') */
-    const char *category;    /* Categoría de ordenación: "datos", "memoria", "monitoreo", "utilidades" */
-    const char *usage;       /* Sintaxis de uso del comando para mostrar en caso de error */
-    const char *description; /* Explicación en español de lo que hace el comando a nivel lógico */
-    const char *syscalls;    /* Explicación de las syscalls involucradas que se mostrarán en la ayuda */
-    int (*handler)(int argc, char **argv); /* Puntero a la función que implementa la lógica del comando */
-} Command;
 
 /* ====================================================================================
  * Declaración de Prototipos de Comandos

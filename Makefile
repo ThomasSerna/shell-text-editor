@@ -7,7 +7,7 @@ SRCS = src/main.c \
        src/cat_entrenamiento.c \
        src/cat_editor.c \
        src/editor/editor.c \
-       src/editor/editor_file.c
+       src/editor/editor_basic.c
 
 OBJS = $(SRCS:.c=.o)
 
