@@ -1,12 +1,17 @@
 #ifndef SHELL_TEXT_EDITOR_EDITOR_H
 #define SHELL_TEXT_EDITOR_EDITOR_H
 
+typedef struct
+{
+    int fd;
+} EditorState;
+
 typedef struct {
     const char *name;        /* Nombre textual del comando que el usuario escribe (e.g., 'd_create') */
     const char *usage;       /* Sintaxis de uso del comando para mostrar en caso de error */
     const char *description; /* Explicación en español de lo que hace el comando a nivel lógico */
     const char *syscalls;    /* Explicación de las syscalls involucradas que se mostrarán en la ayuda */
-    int (*handler)(int argc, char **argv); /* Puntero a la función que implementa la lógica del comando */
+    int (*handler)(EditorState *state ,int argc, char **argv); /* Puntero a la función que implementa la lógica del comando */
 } CommandEditor;
 
 #define COLOR_RESET     "\033[0m"      /* Restablece todos los atributos de color y estilo */
@@ -47,6 +52,7 @@ int editor_main();
  * COMANDO: saludar
  * ====================================================================================
  */
-int cmd_open(int argc, char **argv);
+int cmd_open(EditorState *state ,int argc, char **argv);
+int cmd_quit(EditorState *state ,int argc, char **argv);
 
 #endif //SHELL_TEXT_EDITOR_EDITOR_H

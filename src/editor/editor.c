@@ -11,8 +11,14 @@ CommandEditor commands_editor[] = {
     {
         "o",
         "o <archivo>",
-        "Abre el archivo a editar",
-        "unknown(2)",
+        "Abre un archivo en disco. Si no existe, lo crea con los permisos adecuados. ",
+        "open()",
+        cmd_open
+    }, {
+        "q",
+        "q",
+        "Cierra el File Descriptor y sale de la aplicación sin dejar fugas de memoria",
+        "close()",
         cmd_open
     }
 };
@@ -101,6 +107,10 @@ int editor_main()
     char line[MAX_LINE];
     char *argv[MAX_ARGS];
 
+    EditorState state = {
+        -1
+    };
+
     printf(COLOR_INFO "Abriendo editor de texto...\n\n" COLOR_RESET);
 
     while (1) {
@@ -121,7 +131,8 @@ int editor_main()
         }
 
         /* Comandos Built-in generales */
-        if (strcmp(argv[0], "exit") == 0) {
+        if (strcmp(argv[0], "exit") == 0 || strcmp(argv[0], "q") == 0) {
+            cmd_quit(&state, 1, NULL);
             printf(COLOR_INFO "Saliendo del editor. ¡Hasta luego!\n" COLOR_RESET);
             break;
         } else if (strcmp(argv[0], "clear") == 0) {
@@ -140,7 +151,7 @@ int editor_main()
         int found = 0;
         for (int i = 0; i < num_commands_editor; i++) {
             if (strcmp(argv[0], commands_editor[i].name) == 0) {
-                commands_editor[i].handler(argc, argv);
+                commands_editor[i].handler(&state, argc, argv);
                 found = 1;
                 break;
             }
