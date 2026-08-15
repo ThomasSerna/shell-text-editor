@@ -21,6 +21,12 @@ CommandEditor commands_editor[] = {
         "close()",
         cmd_quit
     }, {
+        "s",
+        "s <texto>",
+        "Imprime la cantidad de veces que se repite el texto en el archivo",
+        "lseek(), read(), fstat()",
+        cmd_search
+    }, {
         "m",
         "m",
         "Imprime los metadatos del archivo",
@@ -89,7 +95,7 @@ void print_help_editor(const char *arg) {
         printf("\nUso general:\n");
         printf("  " COLOR_EDITOR_PROMPT "help <comando>" COLOR_RESET "  -> Muestra la información especifica de un comando\n");
         printf("  " COLOR_EDITOR_PROMPT "clear" COLOR_RESET "             -> Limpia la pantalla.\n");
-        printf("  " COLOR_EDITOR_PROMPT "exit" COLOR_RESET "              -> Cierra el shell.\n\n");
+        printf("  " COLOR_EDITOR_PROMPT "exit" COLOR_RESET "              -> Cierra el shell de edicion.\n\n");
 
         printf("Si necesitas información de un comando especifico, escribe 'help <comando>'\n\n");
         return;
