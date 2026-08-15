@@ -54,5 +54,6 @@ int editor_main();
  */
 int cmd_open(EditorState *state ,int argc, char **argv);
 int cmd_quit(EditorState *state ,int argc, char **argv);
+int cmd_metadata(EditorState *state ,int argc, char **argv);
 
 #endif //SHELL_TEXT_EDITOR_EDITOR_H

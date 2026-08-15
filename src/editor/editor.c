@@ -19,7 +19,13 @@ CommandEditor commands_editor[] = {
         "q",
         "Cierra el File Descriptor y sale de la aplicación sin dejar fugas de memoria",
         "close()",
-        cmd_open
+        cmd_quit
+    }, {
+        "m",
+        "m <archivo>",
+        "Imprime los metadatos del archivo",
+        "stat()",
+        cmd_metadata
     }
 };
 
