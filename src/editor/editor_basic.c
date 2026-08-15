@@ -26,7 +26,13 @@ int cmd_open(EditorState *state, int argc, char **argv)
     }
 
     if (state->fd != -1) {
-        close(state->fd);
+        int res = close(state->fd);
+
+        if (res == -1) {
+            LOG_SYSCALL_ERROR(strerror(errno));
+            close(new_fd);
+            return 1;
+        }
     }
 
     state->fd = new_fd;
@@ -59,9 +65,13 @@ int cmd_quit(EditorState *state, int argc, char **argv)
 }
 
 int cmd_metadata(EditorState *state, int argc, char **argv) {
-    (void)argc;
     (void)argv;
     struct stat st;
+
+    if (argc != 1) {
+        fprintf(stderr, COLOR_ERROR "Uso: m\n" COLOR_RESET);
+        return 1;
+    }
 
     if (state->fd == -1) {
         fprintf(stderr, COLOR_ERROR "No hay ningún archivo abierto\n" COLOR_RESET);
@@ -75,7 +85,7 @@ int cmd_metadata(EditorState *state, int argc, char **argv) {
         return 1;
     }
 
-    printf(COLOR_TITLE "--- Metadatos del Archivo (stat) ---\n" COLOR_RESET);
+    printf(COLOR_TITLE "--- Metadatos del Archivo (fstat) ---\n" COLOR_RESET);
     /* st_dev: ID del dispositivo físico que contiene el archivo */
     printf("  Dispositivo:    [%ld,%ld]\n", (long)major(st.st_dev), (long)minor(st.st_dev));
     /* st_ino: Número de inodo único del archivo dentro del dispositivo */
