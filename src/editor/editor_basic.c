@@ -59,17 +59,17 @@ int cmd_quit(EditorState *state, int argc, char **argv)
 }
 
 int cmd_metadata(EditorState *state, int argc, char **argv) {
-    (void)state;
-
-    if (argc != 2) {
-        fprintf(stderr, COLOR_ERROR "Uso: m <archivo>\n" COLOR_RESET);
-        return 1;
-    }
-    const char *filename = argv[1];
+    (void)argc;
+    (void)argv;
     struct stat st;
 
-    /* 1. LLAMADA AL SISTEMA: stat */
-    int res = stat(filename, &st);
+    if (state->fd == -1) {
+        fprintf(stderr, COLOR_ERROR "No hay ningún archivo abierto\n" COLOR_RESET);
+        return 1;
+    }
+
+    /* 1. LLAMADA AL SISTEMA: fstat */
+    int res = fstat(state->fd, &st);
     if (res == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
         return 1;

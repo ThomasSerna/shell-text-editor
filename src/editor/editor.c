@@ -22,9 +22,9 @@ CommandEditor commands_editor[] = {
         cmd_quit
     }, {
         "m",
-        "m <archivo>",
+        "m",
         "Imprime los metadatos del archivo",
-        "stat()",
+        "fstat()",
         cmd_metadata
     }
 };
@@ -126,6 +126,9 @@ int editor_main()
 
         /* Leer línea de entrada. Retorna NULL en EOF (Ctrl+D) */
         if (fgets(line, sizeof(line), stdin) == NULL) {
+            if (cmd_quit(&state, 1, NULL) != 0) {
+                continue;
+            }
             printf("\n");
             break;
         }
