@@ -26,6 +26,11 @@ int cmd_search(EditorState *state, int argc, char **argv)
 
     struct stat st;
 
+    if (strlen(text) == 0) {
+        fprintf(stderr, COLOR_ERROR "El texto de búsqueda no puede estar vacio\n" COLOR_RESET);
+        return 1;
+    }
+
     if (fstat(state->fd, &st) == -1) {
         perror("fstat");
         return 1;
