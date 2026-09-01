@@ -32,6 +32,12 @@ CommandEditor commands_editor[] = {
         "Imprime los metadatos del archivo",
         "fstat()",
         cmd_metadata
+    }, {
+        "a",
+        "a <texto>",
+        "Agrega el texto como una nueva linea al final del archivo",
+        "Iseek(), write()",
+        cmd_add
     }
 };
 
