@@ -131,3 +131,99 @@ int cmd_metadata(EditorState *state, int argc, char **argv) {
 
     return 0;
 }
+
+/**
+ * ====================================================================================
+ * COMANDO: p (imprimir línea n, o todo el archivo si no se indica n)
+ * ====================================================================================
+ * Uso: p        -> imprime todo el archivo
+ *      p <n>    -> imprime solo la línea n
+ */
+int cmd_print(EditorState *state, int argc, char **argv)
+{
+    if (argc > 2) {
+        fprintf(stderr, COLOR_ERROR "Uso: p [n]\n" COLOR_RESET);
+        return 1;
+    }
+
+    if (state->fd == -1) {
+        fprintf(stderr, COLOR_ERROR "No hay ningún archivo abierto\n" COLOR_RESET);
+        return 1;
+    }
+
+    int target_line = 0;
+    if (argc == 2) {
+        target_line = atoi(argv[1]);
+        if (target_line < 1) {
+            fprintf(stderr, COLOR_ERROR "El número de línea debe ser 1 o mayor\n" COLOR_RESET);
+            return 1;
+        }
+    }
+
+    struct stat st;
+    LOG_SYSCALL("fstat", "fd=%d", state->fd);
+    if (fstat(state->fd, &st) == -1) {
+        LOG_SYSCALL_ERROR(strerror(errno));
+        return 1;
+    }
+    LOG_SYSCALL_RESULT(st.st_size);
+
+    off_t file_size = st.st_size;
+    if (file_size == 0) {
+        printf(COLOR_INFO "El archivo está vacío\n" COLOR_RESET);
+        return 0;
+    }
+
+    char *buffer = malloc(file_size);
+    if (buffer == NULL) {
+        perror("malloc");
+        return 1;
+    }
+
+    LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
+    lseek(state->fd, 0, SEEK_SET);
+    LOG_SYSCALL_RESULT(0);
+
+    LOG_SYSCALL("read", "fd=%d, buf, count=%ld", state->fd, (long)file_size);
+    ssize_t bytes_read = read(state->fd, buffer, file_size);
+    if (bytes_read == -1) {
+        LOG_SYSCALL_ERROR(strerror(errno));
+        free(buffer);
+        return 1;
+    }
+    LOG_SYSCALL_RESULT(bytes_read);
+
+    int current_line = 1;
+    off_t line_start = 0;
+    int printed_something = 0;
+
+    for (off_t i = 0; i < bytes_read; i++) {
+        if (buffer[i] == '\n') {
+            if (target_line == 0 || target_line == current_line) {
+                off_t len = (i - line_start) + 1;
+                LOG_SYSCALL("write", "fd=1, buf, count=%ld", (long)len);
+                write(STDOUT_FILENO, buffer + line_start, len);
+                LOG_SYSCALL_RESULT(len);
+                printed_something = 1;
+            }
+            current_line++;
+            line_start = i + 1;
+        }
+    }
+
+    if (line_start < bytes_read && (target_line == 0 || target_line == current_line)) {
+        off_t len = bytes_read - line_start;
+        write(STDOUT_FILENO, buffer + line_start, len);
+        write(STDOUT_FILENO, "\n", 1);
+        printed_something = 1;
+    }
+
+    free(buffer);
+
+    if (target_line != 0 && !printed_something) {
+        fprintf(stderr, COLOR_ERROR "La línea %d no existe\n" COLOR_RESET, target_line);
+        return 1;
+    }
+
+    return 0;
+}

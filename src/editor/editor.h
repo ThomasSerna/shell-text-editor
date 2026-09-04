@@ -57,5 +57,7 @@ int cmd_quit(EditorState *state ,int argc, char **argv);
 int cmd_metadata(EditorState *state ,int argc, char **argv);
 int cmd_search(EditorState *state ,int argc, char **argv);
 int cmd_add(EditorState *state ,int argc, char **argv);
+int cmd_delete(EditorState *state ,int argc, char **argv);
+int cmd_print(EditorState *state ,int argc, char **argv);   // <-- se agregó esta línea
 
 #endif //SHELL_TEXT_EDITOR_EDITOR_H

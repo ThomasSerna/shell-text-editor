@@ -38,6 +38,18 @@ CommandEditor commands_editor[] = {
         "Agrega el texto como una nueva linea al final del archivo",
         "Iseek(), write()",
         cmd_add
+    }, {
+        "d",
+        "d <n>",
+        "Borra la línea n del archivo",
+        "fstat(), lseek(), read(), write(), ftruncate()",
+        cmd_delete
+    }, {                                    // <-- se agregó esta ficha completa
+        "p",
+        "p [n]",
+        "Imprime la línea n, o todo el archivo si no se indica n",
+        "fstat(), lseek(), read(), write()",
+        cmd_print
     }
 };
 
