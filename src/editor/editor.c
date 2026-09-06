@@ -23,8 +23,8 @@ CommandEditor commands_editor[] = {
         cmd_quit
     }, {
         "s",
-        "s <texto>",
-        "Imprime la cantidad de veces que se repite el texto en el archivo",
+        "s \"<texto>\"",
+        "Imprime la cantidad de veces que se repite el texto (entre comillas) en el archivo",
         "lseek(), read(), fstat()",
         cmd_search
     }, {
@@ -35,9 +35,9 @@ CommandEditor commands_editor[] = {
         cmd_metadata
     }, {
         "a",
-        "a <texto>",
-        "Agrega el texto como una nueva linea al final del archivo",
-        "Iseek(), write()",
+        "a \"<texto>\"",
+        "Agrega el texto (entre comillas) como una nueva linea al final del archivo",
+        "lseek(), write()",
         cmd_add
     }, {
         "d",
@@ -53,8 +53,8 @@ CommandEditor commands_editor[] = {
         cmd_print
     }, {
         "i",
-        "i <n> <texto>",
-        "Inserta texto como una nueva línea en la posición n",
+        "i <n> \"<texto>\"",
+        "Inserta texto (entre comillas) como una nueva línea en la posición n",
         "fstat(), lseek(), read(), write()",
         cmd_insert
     }, {
