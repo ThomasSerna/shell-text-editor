@@ -207,3 +207,153 @@ int cmd_delete(EditorState *state, int argc, char **argv)
     printf(COLOR_RESULT "Línea %d borrada correctamente\n" COLOR_RESET, target_line);
     return 0;
 }
+
+/**
+ * ====================================================================================
+ * COMANDO: i (insertar texto en una línea específica)
+ * ====================================================================================
+ *
+ * Inserta el texto como nueva línea n y desplaza hacia abajo
+ * las líneas que estaban desde n en adelante.
+ */
+int cmd_insert(EditorState *state, int argc, char **argv)
+{
+    if (argc != 3) {
+        fprintf(stderr, COLOR_ERROR "Uso: i <n> <texto>\n" COLOR_RESET);
+        return 1;
+    }
+
+    if (state->fd == -1) {
+        fprintf(stderr, COLOR_ERROR "No hay ningún archivo abierto\n" COLOR_RESET);
+        return 1;
+    }
+
+    int target_line = atoi(argv[1]);
+
+    if (target_line < 1) {
+        fprintf(stderr, COLOR_ERROR "El número de línea debe ser 1 o mayor\n" COLOR_RESET);
+        return 1;
+    }
+
+    const char *text = argv[2];
+    size_t text_len = strlen(text);
+
+    /* Obtener tamaño del archivo */
+    struct stat st;
+
+    if (fstat(state->fd, &st) == -1) {
+        perror("fstat");
+        return 1;
+    }
+
+    off_t file_size = st.st_size;
+
+    /* Leer archivo completo */
+    char *original = malloc(file_size);
+
+    if (file_size > 0 && original == NULL) {
+        perror("malloc");
+        return 1;
+    }
+
+    if (lseek(state->fd, 0, SEEK_SET) == -1) {
+        perror("lseek");
+        free(original);
+        return 1;
+    }
+
+    if (file_size > 0) {
+        if (read(state->fd, original, file_size) == -1) {
+            perror("read");
+            free(original);
+            return 1;
+        }
+    }
+
+    /* Buscar dónde empieza la línea n */
+    off_t insert_pos = 0;
+    int current_line = 1;
+
+    if (target_line > 1) {
+
+        int found = 0;
+
+        for (off_t i = 0; i < file_size; i++) {
+
+            if (original[i] == '\n') {
+                current_line++;
+
+                if (current_line == target_line) {
+                    insert_pos = i + 1;
+                    found = 1;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            fprintf(stderr,
+                    COLOR_ERROR "La línea %d no existe\n" COLOR_RESET,
+                    target_line);
+
+            free(original);
+            return 1;
+        }
+    }
+
+    /* Crear nuevo buffer */
+    off_t new_size = file_size + text_len + 1;
+
+    char *result = malloc(new_size);
+
+    if (result == NULL) {
+        perror("malloc");
+        free(original);
+        return 1;
+    }
+
+    /*
+     * resultado =
+     * [parte anterior] + [texto nuevo + \n] + [resto]
+     */
+
+    memcpy(result, original, insert_pos);
+
+    memcpy(result + insert_pos,
+           text,
+           text_len);
+
+    result[insert_pos + text_len] = '\n';
+
+    memcpy(result + insert_pos + text_len + 1,
+           original + insert_pos,
+           file_size - insert_pos);
+
+    /* Volver al comienzo del archivo */
+    if (lseek(state->fd, 0, SEEK_SET) == -1) {
+        perror("lseek");
+        free(original);
+        free(result);
+        return 1;
+    }
+
+    /* Reescribir archivo */
+    if (write(state->fd, result, new_size) == -1) {
+        perror("write");
+        free(original);
+        free(result);
+        return 1;
+    }
+
+    free(original);
+    free(result);
+
+    printf(
+        COLOR_RESULT
+        "Línea insertada correctamente en la posición %d\n"
+        COLOR_RESET,
+        target_line
+    );
+
+    return 0;
+}

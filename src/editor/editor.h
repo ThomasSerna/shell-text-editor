@@ -1,9 +1,12 @@
 #ifndef SHELL_TEXT_EDITOR_EDITOR_H
 #define SHELL_TEXT_EDITOR_EDITOR_H
 
+#include <stddef.h>
+
 typedef struct
 {
     int fd;
+    char *clipboard;
 } EditorState;
 
 typedef struct {
@@ -58,6 +61,9 @@ int cmd_metadata(EditorState *state ,int argc, char **argv);
 int cmd_search(EditorState *state ,int argc, char **argv);
 int cmd_add(EditorState *state ,int argc, char **argv);
 int cmd_delete(EditorState *state ,int argc, char **argv);
-int cmd_print(EditorState *state ,int argc, char **argv);   // <-- se agregó esta línea
+int cmd_print(EditorState *state ,int argc, char **argv);
+int cmd_insert(EditorState *state, int argc, char **argv);
+int cmd_copy(EditorState *state, int argc, char **argv);
+int cmd_paste(EditorState *state, int argc, char **argv);
 
 #endif //SHELL_TEXT_EDITOR_EDITOR_H

@@ -1,6 +1,7 @@
 #include "editor.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -44,12 +45,30 @@ CommandEditor commands_editor[] = {
         "Borra la línea n del archivo",
         "fstat(), lseek(), read(), write(), ftruncate()",
         cmd_delete
-    }, {                                    // <-- se agregó esta ficha completa
+    }, {
         "p",
         "p [n]",
         "Imprime la línea n, o todo el archivo si no se indica n",
         "fstat(), lseek(), read(), write()",
         cmd_print
+    }, {
+        "i",
+        "i <n> <texto>",
+        "Inserta texto como una nueva línea en la posición n",
+        "fstat(), lseek(), read(), write()",
+        cmd_insert
+    }, {
+        "y",
+        "y <n>",
+        "Copia la línea n al portapapeles",
+        "fstat(), lseek(), read()",
+        cmd_copy
+    }, {
+        "x",
+        "x <n>",
+        "Pega el contenido del portapapeles en la línea n",
+        "fstat(), lseek(), read(), write()",
+        cmd_paste
     }
 };
 
@@ -138,7 +157,8 @@ int editor_main()
     char *argv[MAX_ARGS];
 
     EditorState state = {
-        -1
+        .fd = -1,
+        .clipboard = NULL
     };
 
     printf(COLOR_INFO "Abriendo editor de texto...\n\n" COLOR_RESET);

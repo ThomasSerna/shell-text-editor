@@ -9,7 +9,8 @@ SRCS = src/main.c \
        src/editor/editor.c \
        src/editor/editor_basic.c \
        src/editor/editor_inspection.c \
-       src/editor/editor_modify.c
+       src/editor/editor_modify.c \
+       src/editor/editor_clipboard.c
 
 OBJS = $(SRCS:.c=.o)
 
