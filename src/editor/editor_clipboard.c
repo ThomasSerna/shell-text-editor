@@ -5,13 +5,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
-
+#include <errno.h>
 
 /**
- * COMANDO: y
+ * ====================================================================================
+ * COMANDO: y (copiar línea)
+ * ====================================================================================
  * Uso: y <n>
- *
- * Copia la línea n al portapapeles.
+ * Copia la línea n al portapapeles
  */
 int cmd_copy(EditorState *state, int argc, char **argv)
 {
@@ -35,10 +36,13 @@ int cmd_copy(EditorState *state, int argc, char **argv)
     /* Obtener tamaño del archivo */
     struct stat st;
 
+    /* --- SYSCALL: fstat --- */
+    LOG_SYSCALL("fstat", "fd=%d", state->fd);
     if (fstat(state->fd, &st) == -1) {
-        perror("fstat");
+        LOG_SYSCALL_ERROR(strerror(errno));
         return 1;
     }
+    LOG_SYSCALL_RESULT(st.st_size);
 
     if (st.st_size == 0) {
         fprintf(stderr, COLOR_ERROR "El archivo está vacío\n" COLOR_RESET);
@@ -49,23 +53,29 @@ int cmd_copy(EditorState *state, int argc, char **argv)
     char *buffer = malloc(st.st_size);
 
     if (buffer == NULL) {
-        perror("malloc");
+        perror("malloc"); // Se deja perror porque malloc no es syscall POSIX (es de libc)
         return 1;
     }
 
+    /* --- SYSCALL: lseek --- */
+    LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
     if (lseek(state->fd, 0, SEEK_SET) == -1) {
-        perror("lseek");
+        LOG_SYSCALL_ERROR(strerror(errno));
         free(buffer);
         return 1;
     }
+    LOG_SYSCALL_RESULT(0);
 
+    /* --- SYSCALL: read --- */
+    LOG_SYSCALL("read", "fd=%d, buf, count=%ld", state->fd, (long)st.st_size);
     ssize_t bytes_read = read(state->fd, buffer, st.st_size);
 
     if (bytes_read == -1) {
-        perror("read");
+        LOG_SYSCALL_ERROR(strerror(errno));
         free(buffer);
         return 1;
     }
+    LOG_SYSCALL_RESULT(bytes_read);
 
 
     /* Buscar dónde empieza la línea */
@@ -142,10 +152,11 @@ int cmd_copy(EditorState *state, int argc, char **argv)
 
 
 /**
- * COMANDO: x
+ * ====================================================================================
+ * COMANDO: x (pegar línea)
+ * ====================================================================================
  * Uso: x <n>
- *
- * Pega el contenido del portapapeles en la línea n.
+ * Pega el contenido del portapapeles en la línea n
  */
 int cmd_paste(EditorState *state, int argc, char **argv)
 {

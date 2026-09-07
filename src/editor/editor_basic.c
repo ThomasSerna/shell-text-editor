@@ -9,6 +9,13 @@
 
 #include "editor.h"
 
+/**
+ * ====================================================================================
+ * COMANDO: o (abrir archivo)
+ * ====================================================================================
+ * Uso: o <archivo>
+ * Abre un archivo en disco. Si no existe, lo crea con los permisos adecuados.
+ */
 int cmd_open(EditorState *state, int argc, char **argv)
 {
     if (argc != 2) {
@@ -17,22 +24,28 @@ int cmd_open(EditorState *state, int argc, char **argv)
     }
     const char *filename = argv[1];
 
-    // System call: open()
+    /* --- SYSCALL: open --- */
+    LOG_SYSCALL("open", "pathname=\"%s\", flags=O_RDWR|O_CREAT, mode=0644", filename);
     int new_fd = open(filename, O_RDWR | O_CREAT, 0644);
 
     if (new_fd == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
         return 1;
     }
+    LOG_SYSCALL_RESULT(new_fd);
 
+    // Si ya había un archivo abierto, lo cerramos
     if (state->fd != -1) {
+        /* --- SYSCALL: close (archivo anterior) --- */
+        LOG_SYSCALL("close", "fd=%d", state->fd);
         int res = close(state->fd);
 
         if (res == -1) {
             LOG_SYSCALL_ERROR(strerror(errno));
-            close(new_fd);
+            close(new_fd); // Cerramos el nuevo para evitar fugas
             return 1;
         }
+        LOG_SYSCALL_RESULT(res);
     }
 
     state->fd = new_fd;
@@ -41,6 +54,13 @@ int cmd_open(EditorState *state, int argc, char **argv)
     return 0;
 }
 
+/**
+ * ====================================================================================
+ * COMANDO: q (salir / cerrar)
+ * ====================================================================================
+ * Uso: q
+ * Cierra el File Descriptor y sale de la aplicación sin dejar fugas de memoria.
+ */
 int cmd_quit(EditorState *state, int argc, char **argv)
 {
     (void) argc;
@@ -52,12 +72,17 @@ int cmd_quit(EditorState *state, int argc, char **argv)
         return 0;
     }
 
+    /* --- SYSCALL: close --- */
+    LOG_SYSCALL("close", "fd=%d", state->fd);
     int res = close(state->fd);
+
     if (res == -1)
     {
         LOG_SYSCALL_ERROR(strerror(errno));
         return 1;
     }
+    LOG_SYSCALL_RESULT(res);
+
     state->fd = -1;
 
     printf(COLOR_INFO "Se ha cerrado el file descriptor\n" COLOR_RESET);

@@ -10,6 +10,13 @@
 #include <time.h>
 #include <sys/sysmacros.h>
 
+/**
+ * ====================================================================================
+ * COMANDO: s (búsqueda simple)
+ * ====================================================================================
+ * Uso: s "<texto>"
+ * Imprime en qué línea(s) se encuentra el texto y cuántas veces se repite en total
+ */
 int cmd_search(EditorState *state, int argc, char **argv)
 {
     if (argc != 2) {
@@ -30,6 +37,7 @@ int cmd_search(EditorState *state, int argc, char **argv)
         return 1;
     }
 
+    /* --- SYSCALL: fstat --- */
     LOG_SYSCALL("fstat", "fd=%d", state->fd);
     if (fstat(state->fd, &st) == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
@@ -49,6 +57,7 @@ int cmd_search(EditorState *state, int argc, char **argv)
         return 1;
     }
 
+    /* --- SYSCALL: lseek --- */
     LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
     if (lseek(state->fd, 0, SEEK_SET) == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
@@ -57,6 +66,7 @@ int cmd_search(EditorState *state, int argc, char **argv)
     }
     LOG_SYSCALL_RESULT(0);
 
+    /* --- SYSCALL: read --- */
     LOG_SYSCALL("read", "fd=%d, buf, count=%ld", state->fd, (long)st.st_size);
     ssize_t bytes_read = read(state->fd, buffer, st.st_size);
     if (bytes_read == -1) {
@@ -127,6 +137,13 @@ int cmd_search(EditorState *state, int argc, char **argv)
     return 0;
 }
 
+/**
+ * ====================================================================================
+ * COMANDO: m (metadatos)
+ * ====================================================================================
+ * Uso: m
+ * Imprime los metadatos del archivo
+ */
 int cmd_metadata(EditorState *state, int argc, char **argv) {
     (void)argv;
     struct stat st;
@@ -141,12 +158,14 @@ int cmd_metadata(EditorState *state, int argc, char **argv) {
         return 1;
     }
 
-    /* 1. LLAMADA AL SISTEMA: fstat */
+    /* --- SYSCALL: fstat --- */
+    LOG_SYSCALL("fstat", "fd=%d", state->fd);
     int res = fstat(state->fd, &st);
     if (res == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
         return 1;
     }
+    LOG_SYSCALL_RESULT(res);
 
     printf(COLOR_TITLE "--- Metadatos del Archivo (fstat) ---\n" COLOR_RESET);
     /* st_dev: ID del dispositivo físico que contiene el archivo */
@@ -202,6 +221,8 @@ int cmd_print(EditorState *state, int argc, char **argv)
     }
 
     struct stat st;
+
+    /* --- SYSCALL: fstat --- */
     LOG_SYSCALL("fstat", "fd=%d", state->fd);
     if (fstat(state->fd, &st) == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
@@ -221,10 +242,12 @@ int cmd_print(EditorState *state, int argc, char **argv)
         return 1;
     }
 
+    /* --- SYSCALL: lseek --- */
     LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
     lseek(state->fd, 0, SEEK_SET);
     LOG_SYSCALL_RESULT(0);
 
+    /* --- SYSCALL: read --- */
     LOG_SYSCALL("read", "fd=%d, buf, count=%ld", state->fd, (long)file_size);
     ssize_t bytes_read = read(state->fd, buffer, file_size);
     if (bytes_read == -1) {
@@ -242,9 +265,12 @@ int cmd_print(EditorState *state, int argc, char **argv)
         if (buffer[i] == '\n') {
             if (target_line == 0 || target_line == current_line) {
                 off_t len = (i - line_start) + 1;
+
+                /* --- SYSCALL: write --- */
                 LOG_SYSCALL("write", "fd=1, buf, count=%ld", (long)len);
                 write(STDOUT_FILENO, buffer + line_start, len);
                 LOG_SYSCALL_RESULT(len);
+
                 printed_something = 1;
             }
             current_line++;
@@ -254,8 +280,17 @@ int cmd_print(EditorState *state, int argc, char **argv)
 
     if (line_start < bytes_read && (target_line == 0 || target_line == current_line)) {
         off_t len = bytes_read - line_start;
+
+        /* --- SYSCALL: write --- */
+        LOG_SYSCALL("write", "fd=1, buf, count=%ld", (long)len);
         write(STDOUT_FILENO, buffer + line_start, len);
+        LOG_SYSCALL_RESULT(len);
+
+        /* --- SYSCALL: write --- */
+        LOG_SYSCALL("write", "fd=1, buf, count=1");
         write(STDOUT_FILENO, "\n", 1);
+        LOG_SYSCALL_RESULT(1);
+
         printed_something = 1;
     }
 

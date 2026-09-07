@@ -12,7 +12,7 @@
  * ====================================================================================
  * COMANDO: a (añadir texto al final del archivo)
  * ====================================================================================
- * Uso: a <texto>
+ * Uso: a "<texto>"
  *
  * 1. Se posiciona el cursor de lectura/escritura al FINAL del archivo con lseek().
  *    Esto es necesario porque cada llamada a write() escribe a partir de la
@@ -33,7 +33,7 @@ int cmd_add(EditorState *state, int argc, char **argv)
 
     const char *text = argv[1];
 
-    /* 1. LLAMADA AL SISTEMA: lseek -> mover el cursor al final del archivo */
+    /* --- SYSCALL: lseek --- */
     LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_END", state->fd);
     off_t new_pos = lseek(state->fd, 0, SEEK_END);
 
@@ -56,7 +56,7 @@ int cmd_add(EditorState *state, int argc, char **argv)
     line[text_len] = '\n';
     line[text_len + 1] = '\0';
 
-    /* 2. LLAMADA AL SISTEMA: write -> escribir el texto en el archivo */
+    /* --- SYSCALL: write --- */
     LOG_SYSCALL("write", "fd=%d, buf=\"%s\", count=%zu", state->fd, text, text_len + 1);
     ssize_t bytes_written = write(state->fd, line, text_len + 1);
 
@@ -106,7 +106,7 @@ int cmd_delete(EditorState *state, int argc, char **argv)
         return 1;
     }
 
-    /* 1. LLAMADA AL SISTEMA: fstat -> saber el tamaño actual del archivo */
+    /* --- SYSCALL: fstat --- */
     struct stat st;
     LOG_SYSCALL("fstat", "fd=%d", state->fd);
     if (fstat(state->fd, &st) == -1) {
@@ -132,12 +132,17 @@ int cmd_delete(EditorState *state, int argc, char **argv)
         return 1;
     }
 
-    /* Nos aseguramos de leer desde el inicio del archivo */
+    /* --- SYSCALL: lseek --- */
     LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
-    lseek(state->fd, 0, SEEK_SET);
+    if (lseek(state->fd, 0, SEEK_SET) == -1) {
+        LOG_SYSCALL_ERROR(strerror(errno));
+        free(original);
+        free(result);
+        return 1;
+    }
     LOG_SYSCALL_RESULT(0);
 
-    /* 2. LLAMADA AL SISTEMA: read -> traer todo el archivo a memoria */
+    /* --- SYSCALL: read --- */
     LOG_SYSCALL("read", "fd=%d, buf, count=%ld", state->fd, (long)file_size);
     ssize_t bytes_read = read(state->fd, original, file_size);
     if (bytes_read == -1) {
@@ -175,12 +180,17 @@ int cmd_delete(EditorState *state, int argc, char **argv)
         return 1;
     }
 
-    /* Volvemos al inicio para reescribir el archivo con el contenido nuevo */
+    /* --- SYSCALL: lseek --- */
     LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
-    lseek(state->fd, 0, SEEK_SET);
+    if (lseek(state->fd, 0, SEEK_SET) == -1) {
+        LOG_SYSCALL_ERROR(strerror(errno));
+        free(original);
+        free(result);
+        return 1;
+    }
     LOG_SYSCALL_RESULT(0);
 
-    /* 4. LLAMADA AL SISTEMA: write -> reescribir el archivo sin la línea borrada */
+    /* --- SYSCALL: write --- */
     LOG_SYSCALL("write", "fd=%d, buf, count=%ld", state->fd, (long)result_len);
     ssize_t bytes_written = write(state->fd, result, result_len);
     if (bytes_written == -1) {
@@ -191,7 +201,7 @@ int cmd_delete(EditorState *state, int argc, char **argv)
     }
     LOG_SYSCALL_RESULT(bytes_written);
 
-    /* 5. LLAMADA AL SISTEMA: ftruncate -> cortar los bytes sobrantes del final */
+    /* --- SYSCALL: ftruncate --- */
     LOG_SYSCALL("ftruncate", "fd=%d, length=%ld", state->fd, (long)result_len);
     if (ftruncate(state->fd, result_len) == -1) {
         LOG_SYSCALL_ERROR(strerror(errno));
@@ -212,6 +222,7 @@ int cmd_delete(EditorState *state, int argc, char **argv)
  * ====================================================================================
  * COMANDO: i (insertar texto en una línea específica)
  * ====================================================================================
+ * Uso: i <n> "<texto>"
  *
  * Inserta el texto como nueva línea n y desplaza hacia abajo
  * las líneas que estaban desde n en adelante.
@@ -241,10 +252,13 @@ int cmd_insert(EditorState *state, int argc, char **argv)
     /* Obtener tamaño del archivo */
     struct stat st;
 
+    /* --- SYSCALL: fstat --- */
+    LOG_SYSCALL("fstat", "fd=%d", state->fd);
     if (fstat(state->fd, &st) == -1) {
-        perror("fstat");
+        LOG_SYSCALL_ERROR(strerror(errno));
         return 1;
     }
+    LOG_SYSCALL_RESULT(st.st_size);
 
     off_t file_size = st.st_size;
 
@@ -256,18 +270,25 @@ int cmd_insert(EditorState *state, int argc, char **argv)
         return 1;
     }
 
+    /* --- SYSCALL: lseek --- */
+    LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
     if (lseek(state->fd, 0, SEEK_SET) == -1) {
-        perror("lseek");
+        LOG_SYSCALL_ERROR(strerror(errno));
         free(original);
         return 1;
     }
+    LOG_SYSCALL_RESULT(0);
 
     if (file_size > 0) {
-        if (read(state->fd, original, file_size) == -1) {
-            perror("read");
+        /* --- SYSCALL: read --- */
+        LOG_SYSCALL("read", "fd=%d, buf, count=%ld", state->fd, (long)file_size);
+        ssize_t bytes_read = read(state->fd, original, file_size);
+        if (bytes_read == -1) {
+            LOG_SYSCALL_ERROR(strerror(errno));
             free(original);
             return 1;
         }
+        LOG_SYSCALL_RESULT(bytes_read);
     }
 
     /* Buscar dónde empieza la línea n */
@@ -329,21 +350,26 @@ int cmd_insert(EditorState *state, int argc, char **argv)
            original + insert_pos,
            file_size - insert_pos);
 
-    /* Volver al comienzo del archivo */
+    /* --- SYSCALL: lseek --- */
+    LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
     if (lseek(state->fd, 0, SEEK_SET) == -1) {
-        perror("lseek");
+        LOG_SYSCALL_ERROR(strerror(errno));
         free(original);
         free(result);
         return 1;
     }
+    LOG_SYSCALL_RESULT(0);
 
-    /* Reescribir archivo */
-    if (write(state->fd, result, new_size) == -1) {
-        perror("write");
+    /* --- SYSCALL: write --- */
+    LOG_SYSCALL("write", "fd=%d, buf, count=%ld", state->fd, (long)new_size);
+    ssize_t bytes_written = write(state->fd, result, new_size);
+    if (bytes_written == -1) {
+        LOG_SYSCALL_ERROR(strerror(errno));
         free(original);
         free(result);
         return 1;
     }
+    LOG_SYSCALL_RESULT(bytes_written);
 
     free(original);
     free(result);
