@@ -24,7 +24,7 @@ CommandEditor commands_editor[] = {
     }, {
         "s",
         "s \"<texto>\"",
-        "Imprime la cantidad de veces que se repite el texto (entre comillas) en el archivo",
+        "Imprime en que linea(s) se encuentra el texto (entre comillas) y cuantas veces se repite en total",
         "lseek(), read(), fstat()",
         cmd_search
     }, {

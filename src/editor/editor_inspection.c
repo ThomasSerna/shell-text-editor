@@ -23,68 +23,109 @@ int cmd_search(EditorState *state, int argc, char **argv)
     }
 
     const char *text = argv[1];
-
     struct stat st;
 
     if (strlen(text) == 0) {
-        fprintf(stderr, COLOR_ERROR "El texto de búsqueda no puede estar vacio\n" COLOR_RESET);
+        fprintf(stderr, COLOR_ERROR "El texto de búsqueda no puede estar vacío\n" COLOR_RESET);
         return 1;
     }
 
+    LOG_SYSCALL("fstat", "fd=%d", state->fd);
     if (fstat(state->fd, &st) == -1) {
-        perror("fstat");
+        LOG_SYSCALL_ERROR(strerror(errno));
         return 1;
+    }
+    LOG_SYSCALL_RESULT(st.st_size);
+
+    // Si el archivo está vacío, no hay nada que buscar
+    if (st.st_size == 0) {
+        printf(COLOR_INFO "El archivo está vacío.\n" COLOR_RESET);
+        return 0;
     }
 
     char *buffer = malloc(st.st_size + 1);
-
     if (buffer == NULL) {
         perror("malloc");
         return 1;
     }
 
+    LOG_SYSCALL("lseek", "fd=%d, offset=0, whence=SEEK_SET", state->fd);
     if (lseek(state->fd, 0, SEEK_SET) == -1) {
-        perror("lseek");
+        LOG_SYSCALL_ERROR(strerror(errno));
         free(buffer);
         return 1;
     }
+    LOG_SYSCALL_RESULT(0);
 
+    LOG_SYSCALL("read", "fd=%d, buf, count=%ld", state->fd, (long)st.st_size);
     ssize_t bytes_read = read(state->fd, buffer, st.st_size);
-
     if (bytes_read == -1) {
-        perror("read");
+        LOG_SYSCALL_ERROR(strerror(errno));
         free(buffer);
         return 1;
     }
+    LOG_SYSCALL_RESULT(bytes_read);
 
-    buffer[bytes_read] = '\0';
+    buffer[bytes_read] = '\0'; // Aseguramos que el buffer sea un string válido
 
-    char *current = buffer;
-    int count = 0;
+    char *line_start = buffer;
+    int line_number = 1;
+    int total_count = 0;
 
-    while ((current = strstr(current, text)) != NULL) {
-        count++;
-        current += strlen(text);
+    printf(COLOR_INFO "Resultados de búsqueda para '%s':\n" COLOR_RESET, text);
+
+    // Recorremos el buffer completo línea por línea
+    while (line_start != NULL && *line_start != '\0') {
+        // Buscamos el final de la línea actual
+        char *line_end = strchr(line_start, '\n');
+
+        if (line_end != NULL) {
+            *line_end = '\0'; // Aislamos la línea temporalmente para que strstr solo busque aquí
+        }
+
+        char *current = line_start;
+        int count_in_line = 0;
+
+        // Buscamos repeticiones dentro de esta línea específica
+        while ((current = strstr(current, text)) != NULL) {
+            count_in_line++;
+            total_count++;
+            current += strlen(text); // Avanzamos para buscar la siguiente coincidencia
+        }
+
+        // Si encontramos la palabra en esta línea, imprimimos el detalle
+        if (count_in_line > 0) {
+            printf("  -> Encontrado en la línea %d (%d vez/veces)\n", line_number, count_in_line);
+        }
+
+        // Restauramos el salto de línea y avanzamos a la siguiente
+        if (line_end != NULL) {
+            *line_end = '\n';
+            line_start = line_end + 1;
+        } else {
+            line_start = NULL; // Llegamos al final del archivo
+        }
+
+        line_number++;
     }
 
-    if (count == 0) {
+    // Mostrar resultados
+    if (total_count == 0) {
         printf(COLOR_INFO
                "No se encontraron coincidencias para '%s'\n"
                COLOR_RESET,
                text);
     } else {
         printf(COLOR_RESULT
-               "Se encontraron %d coincidencias de '%s'\n"
+               "\nSe encontraron %d coincidencias en total de '%s'\n"
                COLOR_RESET,
-               count,
+               total_count,
                text);
     }
 
     free(buffer);
-
     return 0;
 }
-
 
 int cmd_metadata(EditorState *state, int argc, char **argv) {
     (void)argv;
