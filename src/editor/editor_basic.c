@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -65,6 +66,12 @@ int cmd_quit(EditorState *state, int argc, char **argv)
 {
     (void) argc;
     (void) argv;
+
+    if (state->clipboard != NULL)
+    {
+        free(state->clipboard);
+        state->clipboard = NULL;
+    }
 
     if (state->fd == -1)
     {
